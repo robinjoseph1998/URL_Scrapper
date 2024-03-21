@@ -8,24 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var wg sync.WaitGroup
-
 func UrlScrapper(c *gin.Context) {
 	var requestUrls []string
 	if err := c.ShouldBind(&requestUrls); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	var wg sync.WaitGroup
 	for _, url := range requestUrls {
 		wg.Add(1)
-		go FetchUrl(url, c)
+		go FetchUrl(url, &wg, c)
 	}
 	wg.Wait()
 
 }
 
-func FetchUrl(url string, c *gin.Context) {
+func FetchUrl(url string, wg *sync.WaitGroup, c *gin.Context) {
 	defer wg.Done()
 	resp, err := http.Get(url)
 	if err != nil {
